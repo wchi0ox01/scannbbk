@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงทะเบียนนักเรียน - ระบบเช็คชื่อวิทยาลัย</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom styles -->
+    <style>
+        body { font-family: 'Inter', 'Kanit', sans-serif; }
+        .loader { border-top-color: #3b82f6; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+
+    <div class="container mx-auto p-4 md:p-6">
+        <header class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <i data-lucide="user-plus" class="text-blue-600 w-8 h-8"></i>
+                <h1 class="text-xl md:text-2xl font-bold text-gray-700 dark:text-gray-200">ลงทะเบียนนักเรียน</h1>
+            </div>
+        </header>
+
+        <main class="space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md max-w-lg mx-auto">
+                <p class="text-center text-gray-600 dark:text-gray-400 mb-6">กรุณากรอกข้อมูลและอัปโหลดรูปภาพใบหน้าของคุณ</p>
+                
+                <div id="alert" class="p-3 rounded-lg text-sm mb-4 hidden" role="alert"></div>
+                
+                <form id="registrationForm" class="space-y-4">
+                    <div>
+                        <label for="studentId" class="block text-sm font-medium text-gray-700 dark:text-gray-300">เลขประจำตัวนักเรียน <span class="text-red-500">*</span></label>
+                        <input type="text" id="studentId" name="studentId" required placeholder="กรอกเลขประจำตัว" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="studentName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
+                        <input type="text" id="studentName" name="studentName" required placeholder="กรอกชื่อ-นามสกุล" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="studentClass" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ชั้นปี <span class="text-red-500">*</span></label>
+                        <select id="studentClass" name="studentClass" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            <option value="">-- เลือกชั้นปี --</option>
+                            <option value="ปวช.1">ปวช.1</option>
+                            <option value="ปวช.2">ปวช.2</option>
+                            <option value="ปวช.3">ปวช.3</option>
+                            <option value="ปวส.1">ปวส.1</option>
+                            <option value="ปวส.2">ปวส.2</option>
+                        </select>
+                    </div>
+                    
+                    <div class="border-2 border-dashed border-blue-400 dark:border-blue-600 rounded-lg p-6 text-center bg-blue-50 dark:bg-blue-900/20">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">รูปภาพใบหน้า <span class="text-red-500">*</span></label>
+                        <div class="flex justify-center gap-4 mb-4">
+                            <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500" id="captureBtn">
+                                <i data-lucide="camera" class="w-5 h-5 mr-2"></i> ถ่ายรูป
+                            </button>
+                            <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-700 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="uploadBtn">
+                                <i data-lucide="upload" class="w-5 h-5 mr-2"></i> เลือกไฟล์
+                            </button>
+                        </div>
+                        <input type="file" id="fileInput" accept="image/*" class="hidden">
+                        
+                        <div id="imagePreview" class="mt-4 hidden">
+                            <img id="previewImg" src="" alt="Preview" class="max-w-full max-h-64 mx-auto rounded-lg shadow-md">
+                        </div>
+                        
+                        <div id="cameraPreview" class="mt-4 hidden">
+                            <video id="video" autoplay playsinline class="w-full rounded-lg shadow-md"></video>
+                            <div class="flex justify-center gap-4 mt-4">
+                                <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="snapBtn">
+                                    <i data-lucide="camera" class="w-5 h-5 mr-2"></i> ถ่ายภาพ
+                                </button>
+                                <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-700 text-sm font-medium rounded-md shadow-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="cancelCameraBtn">
+                                    <i data-lucide="x-circle" class="w-5 h-5 mr-2"></i> ยกเลิก
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <canvas id="canvas" class="hidden"></canvas>
+                    </div>
+                    
+                    <div class="loading text-center mt-6 hidden" id="loading">
+                        <div class="spinner w-8 h-8 mx-auto border-4 border-gray-200 dark:border-gray-700 rounded-full loader"></div>
+                        <p class="mt-2 text-blue-600 dark:text-blue-400">กำลังลงทะเบียน...</p>
+                    </div>
+                    
+                    <button type="submit" class="w-full flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" id="submitBtn">
+                        <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i> ลงทะเบียน
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        let gasWebAppUrl = localStorage.getItem('gasWebAppUrl') || '';
+        let capturedImageData = null;
+        let videoStream = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!gasWebAppUrl) {
+                showAlert('alert', 'กรุณาตั้งค่า Google Apps Script URL ก่อนใช้งาน', 'error');
+                return;
+            }
+            
+            const registeredStudentId = localStorage.getItem('registeredStudentId');
+            if (registeredStudentId) {
+                showAlert('alert', 'คุณได้ลงทะเบียนแล้ว กำลังนำไปยังหน้าเช็คชื่อ...', 'info');
+                setTimeout(() => {
+                    window.location.href = 'checkin.html';
+                }, 2000);
+            }
+        });
+
+        document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const studentId = document.getElementById('studentId').value.trim();
+            const studentName = document.getElementById('studentName').value.trim();
+            const studentClass = document.getElementById('studentClass').value;
+            
+            if (!capturedImageData) {
+                showAlert('alert', 'กรุณาอัปโหลดหรือถ่ายรูปภาพใบหน้า', 'error');
+                return;
+            }
+            
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('submitBtn').disabled = true;
+            
+            try {
+                const checkResponse = await apiCall({
+                    action: 'getStudentRegistrationStatus',
+                    data: { id: studentId }
+                });
+                
+                if (checkResponse.success && checkResponse.registered) {
+                    showAlert('alert', 'เลขประจำตัวนี้ได้ลงทะเบียนแล้ว', 'error');
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('submitBtn').disabled = false;
+                    return;
+                }
+                
+                const response = await apiCall({
+                    action: 'registerStudent',
+                    data: {
+                        id: studentId,
+                        name: studentName,
+                        class: studentClass,
+                        imageData: capturedImageData,
+                        registrationDate: new Date().toISOString()
+                    }
+                });
+                
+                if (response.success) {
+                    showAlert('alert', 'ลงทะเบียนสำเร็จ! กำลังนำไปยังหน้าเช็คชื่อ...', 'success');
+                    localStorage.setItem('registeredStudentId', studentId);
+                    localStorage.setItem('registeredStudentName', studentName);
+                    localStorage.setItem('registeredStudentClass', studentClass);
+                    
+                    setTimeout(() => {
+                        window.location.href = 'checkin.html';
+                    }, 2000);
+                } else {
+                    showAlert('alert', 'เกิดข้อผิดพลาด: ' + response.error, 'error');
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('submitBtn').disabled = false;
+                }
+            } catch (error) {
+                showAlert('alert', 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message, 'error');
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('submitBtn').disabled = false;
+            }
+        });
+
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    capturedImageData = event.target.result;
+                    document.getElementById('previewImg').src = capturedImageData;
+                    document.getElementById('imagePreview').classList.remove('hidden');
+                    document.getElementById('cameraPreview').classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('captureBtn').addEventListener('click', async () => {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                const video = document.getElementById('video');
+                video.srcObject = videoStream;
+                document.getElementById('cameraPreview').classList.remove('hidden');
+                document.getElementById('imagePreview').classList.add('hidden');
+            } catch (error) {
+                showAlert('alert', 'ไม่สามารถเข้าถึงกล้องได้: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('snapBtn').addEventListener('click', () => {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            capturedImageData = canvas.toDataURL('image/jpeg', 0.8);
+            document.getElementById('previewImg').src = capturedImageData;
+            document.getElementById('imagePreview').classList.remove('hidden');
+            
+            stopCamera();
+        });
+
+        document.getElementById('cancelCameraBtn').addEventListener('click', () => {
+            stopCamera();
+        });
+
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            document.getElementById('cameraPreview').classList.add('hidden');
+        }
+
+        function showAlert(elementId, message, type) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.textContent = message;
+            alertDiv.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800');
+            if (type === 'success') {
+                alertDiv.classList.add('bg-green-100', 'text-green-800');
+            } else if (type === 'error') {
+                alertDiv.classList.add('bg-red-100', 'text-red-800');
+            } else if (type === 'info') {
+                alertDiv.classList.add('bg-blue-100', 'text-blue-800');
+            }
+            alertDiv.classList.remove('hidden');
+            
+            setTimeout(() => {
+                alertDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        async function apiCall(payload) {
+            if (!gasWebAppUrl) {
+                throw new Error('GAS URL not configured');
+            }
+            
+            try {
+                const response = await fetch(gasWebAppUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Call Error:', error);
+                throw error;
+            }
+        }
+    </script>
+</body>
+</html>
+
